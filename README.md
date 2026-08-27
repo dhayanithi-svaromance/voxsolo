@@ -5,6 +5,11 @@
 
 On a mixing console, *solo* plays one channel and silences the rest. `voxsolo` does that to people: pick a speaker, get a full-length stem where only they exist — every kept sample copied verbatim from your source.
 
+**🎧 Hear it now — no install:** [dhayanithi-svaromance.github.io/voxsolo](https://dhayanithi-svaromance.github.io/voxsolo/) — a scene from *His Girl Friday* (1940, public domain, famous for its overlapping rapid-fire dialogue), soloed by this tool. Switch tracks to hear each actor alone; 12.9s of cross-talk silenced. The page itself is voxsolo's own HTML output.
+
+[![CI](https://github.com/dhayanithi-svaromance/voxsolo/actions/workflows/test.yml/badge.svg)](https://github.com/dhayanithi-svaromance/voxsolo/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 No established open-source tool does the middle step. Source-separation models (Demucs, SepFormer, ClearVoice) *resynthesize* audio — fine for karaoke, wrong for film dialogue where you must keep the original noise floor, room tone, and every bit of the recording exactly as shot. `voxsolo` instead **copies the target speaker's samples verbatim** and silences everyone else, including every region where two people talk at once. What you keep is bit-identical to the source — and the tool proves it.
 
 ```
@@ -31,11 +36,17 @@ Diarization tools (pyannote, NeMo, WhisperX) output *labels* — RTTM files and 
 ## Install
 
 ```bash
-git clone https://github.com/dhayanithi-svaromance/voxsolo
-cd voxsolo
-pip install .                    # or: pip install ".[transcribe]" for subtitles with text
+pip install voxsolo              # or: pip install "voxsolo[transcribe]" for subtitles with text
 # ffmpeg must be on PATH:  sudo apt install ffmpeg  /  brew install ffmpeg
 ```
+
+<details><summary>Install from source instead</summary>
+
+```bash
+git clone https://github.com/dhayanithi-svaromance/voxsolo
+cd voxsolo && pip install .
+```
+</details>
 
 **Models.** The default engine is pyannote `speaker-diarization-community-1` (the current standard, best accuracy), falling back to `speaker-diarization-3.1`. Both are gated on Hugging Face — a free, one-time terms acceptance:
 
@@ -74,6 +85,24 @@ The flags that matter most:
 | `--fade 0` | Bit-exact region edges (accepting possible clicks). |
 
 Outputs land next to your input (or in `-o DIR`): `<name>_<SPEAKER>_timeline.wav` stems aligned to the original timeline, `<name>_<SPEAKER>_only.mov` video with isolated audio, `<name>.srt/.vtt/.edl`, `<name>_markers.csv`, `<name>_labels.txt` (Audacity), `<name>.rttm`, `<name>_timeline.json`, `<name>_player.html`.
+
+## Measured, not promised
+
+Real clips, real numbers (RTX 3050 Laptop 4 GB unless noted):
+
+| Clip | Length | Overlap silenced | Stems | Diarization time | `--verify` |
+|---|---|---|---|---|---|
+| *His Girl Friday* (1940) office scene — [hear it](https://dhayanithi-svaromance.github.io/voxsolo/) | 75 s | 12.9 s in 15 regions | 30.0 s + 29.9 s | 11.0 s (~7× realtime) | ✅ bit-identical |
+| 1980s Tamil film scene, 44.1 kHz stereo, heavy tape hiss | 68 s | 6.4 s in 4 regions | 26.2 s + 18.3 s | — | ✅ bit-identical |
+
+What `--verify` prints — for every stem, every render:
+
+```
+SPEAKER_00: kept 30.02s of 75.00s (40.0%) in 15 region(s)
+  verify: bit-identical=True others-silent=True length=True [OK]
+```
+
+`bit-identical` compares every kept sample against the source; `others-silent` asserts digital zero wherever any other speaker talks. If either fails, the exit code fails. That's the whole fidelity claim, and it's machine-checked on your file, not ours.
 
 ## How it compares
 
@@ -128,3 +157,7 @@ tests/            30 tests, model-free, run in CI
 ## License
 
 MIT (see [LICENSE](LICENSE)). The pyannote **models** carry their own terms — accept them on their Hugging Face pages before commercial use; `pyannote.audio` itself is MIT, `speaker-diarization-community-1` weights are CC-BY-4.0.
+
+---
+
+If voxsolo saved you a re-record, a paid tool, or an afternoon of manual muting — [a star](https://github.com/dhayanithi-svaromance/voxsolo) helps the next editor find it.

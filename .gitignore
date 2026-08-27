@@ -28,3 +28,7 @@ build/
 dist/
 *.egg-info/
 .pytest_cache/
+
+# The hosted demo (docs/) and repo assets are committed on purpose
+!docs/**
+!assets/**
