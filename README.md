@@ -7,6 +7,7 @@ On a mixing console, *solo* plays one channel and silences the rest. `voxsolo` d
 
 **🎧 Hear it now — no install:** [dhayanithi-svaromance.github.io/voxsolo](https://dhayanithi-svaromance.github.io/voxsolo/) — a scene from *His Girl Friday* (1940, public domain, famous for its overlapping rapid-fire dialogue), soloed by this tool. Switch tracks to hear each actor alone; 12.9s of cross-talk silenced. The page itself is voxsolo's own HTML output.
 
+[![PyPI](https://img.shields.io/pypi/v/voxsolo)](https://pypi.org/project/voxsolo/)
 [![CI](https://github.com/dhayanithi-svaromance/voxsolo/actions/workflows/test.yml/badge.svg)](https://github.com/dhayanithi-svaromance/voxsolo/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
