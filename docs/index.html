@@ -1,373 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>voxsolo demo — hear one voice soloed</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-dark: #0a0e17;
-      --bg-card: rgba(20, 27, 45, 0.75);
-      --border-card: rgba(255, 255, 255, 0.08);
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(0, 242, 254, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding: 2.5rem 1.5rem;
-      line-height: 1.6;
-    }
-    .container { max-width: 1100px; margin: 0 auto; }
-    header { margin-bottom: 2rem; }
-    .badge-pill {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.8rem;
-      font-weight: 600; text-transform: uppercase; background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 0.75rem;
-    }
-    .badge-pulse {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #10b981; box-shadow: 0 0 10px #10b981;
-    }
-    h1 {
-      font-size: 2.25rem; font-weight: 800;
-      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;
-    }
-    .subtitle { color: var(--text-muted); font-size: 1.05rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
-    .metrics-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem; margin-bottom: 2rem;
-    }
-    .metric-card {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      backdrop-filter: blur(12px); border-radius: 16px; padding: 1.25rem 1.5rem;
-    }
-    .metric-title { font-size: 0.85rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; margin-bottom: 0.35rem; }
-    .metric-value { font-size: 1.6rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-    .metric-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>voxsolo — press solo on any voice</title>
+<meta name="description" content="Hear voxsolo isolate one actor from His Girl Friday's overlapping dialogue — verbatim stems, cross-talk silenced, bit-identical audio.">
+<meta property="og:title" content="voxsolo — press solo on any voice">
+<meta property="og:description" content="A 1940 screwball argument, split into verbatim per-actor stems. Press solo and hear it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#131517; --panel:#1C1F22; --panel2:#22262A; --line:#2C3034;
+    --ink:#ECEDE8; --wire:#9AA29D; --dim:#5C6360;
+    --amber:#E8A733; --green:#4FB58C; --clay:#D3766B;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--ground);color:var(--ink);font-family:Archivo,system-ui,sans-serif;line-height:1.5}
+  a{color:var(--amber)}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  .mono{font-family:"IBM Plex Mono",monospace}
 
-    .player-card {
-      background: var(--bg-card); border: 1px solid var(--border-card);
-      backdrop-filter: blur(16px); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
-    }
-    .player-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-    .speaker-pill {
-      font-size: 0.85rem; font-weight: 600; padding: 0.3rem 0.85rem; border-radius: 9999px;
-      display: inline-flex; align-items: center; gap: 0.5rem;
-    }
-    .timeline-container { margin-bottom: 1.5rem; position: relative; }
-    .timeline-track {
-      height: 52px; background: rgba(15, 23, 42, 0.8); border-radius: 12px;
-      position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .timeline-segment {
-      position: absolute; top: 4px; bottom: 4px; border-radius: 8px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 700; color: #fff; padding: 0 4px;
-    }
-    .timeline-segment:hover { filter: brightness(1.25); z-index: 10; }
-    .playhead {
-      position: absolute; top: 0; bottom: 0; width: 2px; background: #ffffff;
-      box-shadow: 0 0 10px #ffffff; pointer-events: none; z-index: 20; left: 0%;
-      transition: left 0.1s linear;
-    }
-    .time-indicators {
-      display: flex; justify-content: space-between; font-size: 0.8rem;
-      color: var(--text-dim); font-family: 'JetBrains Mono', monospace; margin-top: 0.5rem;
-    }
-    .controls-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; }
-    .play-btn-group { display: flex; align-items: center; gap: 1rem; }
-    .btn-main {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: linear-gradient(135deg, #00f2fe, #4facfe); border: none;
-      color: #04101e; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 8px 24px rgba(0, 242, 254, 0.4);
-    }
-    .btn-main svg { width: 22px; height: 22px; fill: currentColor; }
-    .time-display { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; }
-    .filter-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .filter-btn {
-      padding: 0.4rem 0.9rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04); color: var(--text-muted); font-size: 0.85rem;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      color: #fff; background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3);
-    }
-    .legend { display: flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; font-size: 0.85rem; }
-    .legend-item { display: flex; align-items: center; gap: 0.5rem; }
-    .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+  nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+  .wordmark{font-weight:800;font-size:1.25rem;letter-spacing:-0.02em}
+  .wordmark i{font-style:normal;color:var(--amber)}
+  .nav-r{display:flex;gap:10px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
+       padding:8px 14px;font-size:0.82rem;font-weight:600;text-decoration:none;color:var(--ink);background:var(--panel)}
+  .btn:hover{border-color:var(--wire)}
+  .btn.primary{background:var(--amber);border-color:var(--amber);color:#171310}
+  .pipchip{cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:0.78rem;color:var(--wire);
+           border:1px dashed var(--line);border-radius:8px;padding:8px 12px;background:none}
+  .pipchip:hover{color:var(--ink);border-color:var(--wire)}
 
-    .segment-list { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 1.25rem; }
-    .dialogue-card {
-      background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px;
-      padding: 1.15rem 1.5rem; display: grid; grid-template-columns: 140px 1fr auto;
-      gap: 1.5rem; align-items: center; cursor: pointer; transition: all 0.2s;
-    }
-    .dialogue-card:hover { background: rgba(30, 41, 69, 0.85); transform: translateX(4px); }
-    .dialogue-card.active { border-color: #00f2fe; background: rgba(0, 242, 254, 0.06); }
-    .timestamp-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
-    .dialogue-text { font-size: 1.05rem; font-weight: 500; color: #fff; }
-    .play-icon-btn {
-      width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.05); color: #fff; display: flex; align-items: center;
-      justify-content: center; cursor: pointer;
-    }
-    .play-icon-btn:hover { background: #fff; color: #000; transform: scale(1.1); }
-  </style>
+  header.hero{padding:34px 0 26px}
+  h1{font-size:clamp(1.7rem,4.6vw,2.6rem);font-weight:800;letter-spacing:-0.02em;line-height:1.08;margin:0 0 12px;text-wrap:balance}
+  .sub{color:var(--wire);font-size:1.02rem;max-width:44rem;margin:0 0 10px}
+  .sub b{color:var(--ink);font-weight:600}
+  .meta{font-family:"IBM Plex Mono",monospace;font-size:0.72rem;color:var(--dim);letter-spacing:0.06em;text-transform:uppercase}
+
+  .console{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:8px 0 26px}
+  .transport{display:flex;align-items:center;gap:16px;padding:4px 4px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .playbtn{width:52px;height:52px;border-radius:50%;background:var(--amber);border:none;cursor:pointer;
+           display:flex;align-items:center;justify-content:center;flex:none}
+  .playbtn:hover{filter:brightness(1.08)}
+  .playbtn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .playbtn svg{width:20px;height:20px;fill:#171310}
+  .time{font-family:"IBM Plex Mono",monospace;font-size:0.9rem;color:var(--wire);font-variant-numeric:tabular-nums;flex:none}
+  .caption{flex:1;min-width:220px;font-family:"IBM Plex Mono",monospace;font-size:0.85rem;color:var(--wire);
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .caption .who{font-weight:600}
+  .caption .who.A{color:var(--amber)} .caption .who.B{color:var(--green)}
+
+  .strip{display:grid;grid-template-columns:76px 150px 1fr;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line)}
+  .strip:last-of-type{border-bottom:none}
+  .solo{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:0.72rem;letter-spacing:0.08em;
+        border:1.5px solid var(--line);color:var(--wire);background:var(--panel2);border-radius:7px;
+        padding:10px 0;width:76px;cursor:pointer;text-align:center}
+  .solo:hover{border-color:var(--wire);color:var(--ink)}
+  .solo:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .strip.active .solo{background:var(--amber);border-color:var(--amber);color:#171310}
+  .tlabel{font-weight:700;font-size:0.9rem}
+  .tsub{font-family:"IBM Plex Mono",monospace;font-size:0.7rem;color:var(--dim);margin-top:3px}
+  .wavebox{position:relative;height:76px;cursor:pointer}
+  .wavebox canvas{position:absolute;inset:0;width:100%;height:100%}
+  .strip .wavebox{opacity:0.5;transition:opacity 0.2s}
+  .strip.active .wavebox{opacity:1}
+  @media (prefers-reduced-motion: reduce){.strip .wavebox{transition:none}}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;padding:12px 4px 2px}
+  .lg{display:flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:0.7rem;color:var(--wire)}
+  .sw{width:14px;height:8px;border-radius:2px}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:0 0 30px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.25rem;font-variant-numeric:tabular-nums}
+  .stat .v em{font-style:normal;color:var(--amber)}
+  .stat .k{font-size:0.78rem;color:var(--wire);margin-top:4px;line-height:1.4}
+  .stat .k a{color:var(--wire)}
+
+  .made{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:30px;
+        display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+  @media (max-width:720px){.made{grid-template-columns:1fr}.strip{grid-template-columns:64px 1fr;grid-template-rows:auto auto}.strip .wavebox{grid-column:1/-1}}
+  .made h2{font-size:1.02rem;font-weight:700;margin:0 0 8px}
+  .cmd{font-family:"IBM Plex Mono",monospace;font-size:0.88rem;background:var(--ground);border:1px solid var(--line);
+       border-radius:8px;padding:11px 14px;color:var(--ink)}
+  .cmd b{color:var(--amber);font-weight:600}
+  .made .note{font-size:0.78rem;color:var(--dim);margin-top:8px}
+  .dl{display:flex;gap:10px;flex-wrap:wrap}
+  .dl a{font-family:"IBM Plex Mono",monospace;font-size:0.75rem;color:var(--ink);text-decoration:none;
+        border:1px solid var(--line);border-radius:8px;padding:9px 13px;background:var(--panel2)}
+  .dl a:hover{border-color:var(--amber);color:var(--amber)}
+
+  footer{border-top:1px solid var(--line);padding:20px 0 44px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer p{margin:0;font-size:0.76rem;color:var(--dim);line-height:1.6;max-width:34rem}
+  footer a{color:var(--wire)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--amber);color:#171310;
+         font-family:"IBM Plex Mono",monospace;font-size:0.8rem;font-weight:600;padding:9px 16px;border-radius:8px;
+         opacity:0;pointer-events:none;transition:opacity 0.25s}
+  .toast.show{opacity:1}
+</style>
 </head>
 <body>
-  <div class="container"><div style="max-width:1100px;margin:0 auto 1.2rem;padding:0.9rem 1.2rem;border:1px solid rgba(0,242,254,0.35);border-radius:12px;background:rgba(0,242,254,0.06);font-size:0.95rem;line-height:1.55">
-<strong>This page is voxsolo's own output.</strong> The scene: <em>His Girl Friday</em> (1940, public domain — famous for overlapping rapid-fire dialogue). One command produced everything here: the speaker timeline below, two isolated stems (switch tracks to hear one actor soloed — 12.9s of cross-talk silenced), the <a href="hgf_scene.srt" style="color:#00f2fe">SRT</a> and <a href="hgf_scene.edl" style="color:#00f2fe">CMX 3600 EDL</a>.
-Audio here is compressed for streaming; the tool's real output is lossless WAV, and <code>--verify</code> proved every kept sample bit-identical to the source.
-&nbsp;→ <a href="https://github.com/dhayanithi-svaromance/voxsolo" style="color:#00f2fe;font-weight:600">github.com/dhayanithi-svaromance/voxsolo</a></div>
-    <header>
-      <div class="badge-pill">
-        <span class="badge-pulse"></span>
-        <span>Universal Speaker Diarization • Multi-Speaker Pipeline</span>
-      </div>
-      <h1>Speaker Diarization Dashboard</h1>
-      <div class="subtitle">
-        <span><strong>Media:</strong> hgf_scene.wav</span>
-        <span>•</span>
-        <span><strong>Total Duration:</strong> 75.00s</span>
-        <span>•</span>
-        <span><strong>Speakers Detected:</strong> 2</span>
-      </div>
-    </header>
+<div class="wrap">
+  <nav>
+    <div class="wordmark">vox<i>solo</i></div>
+    <div class="nav-r">
+      <button class="pipchip" id="pipBtn" title="copy install command">pip install voxsolo</button>
+      <a class="btn primary" href="https://github.com/dhayanithi-svaromance/voxsolo">GitHub&nbsp;→</a>
+    </div>
+  </nav>
 
-    <!-- Metrics -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-title">Duration</div>
-        <div class="metric-value">75.00s</div>
-        <div class="metric-sub">Total Media Length</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Detected Speakers</div>
-        <div class="metric-value" style="color: #00f2fe;">2</div>
-        <div class="metric-sub">Clustered Neural Profiles</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Total Turns</div>
-        <div class="metric-value">31</div>
-        <div class="metric-sub">Diarized Segments</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Noise Handling</div>
-        <div class="metric-value" style="color: #10b981;">Preserved</div>
-        <div class="metric-sub">100% Original Acoustics</div>
-      </div>
+  <header class="hero">
+    <h1>Press solo on a 1940 screwball argument.</h1>
+    <p class="sub"><b><em>His Girl Friday</em></b> is famous for actors talking over each other. voxsolo split this scene into one verbatim stem per voice — cross-talk silenced, every kept sample untouched.</p>
+    <p class="meta">public domain · 75 s scene · 2 voices · processed in 11 s on a laptop gpu</p>
+  </header>
+
+  <section class="console" aria-label="listening console">
+    <div class="transport">
+      <button class="playbtn" id="play" aria-label="play or pause">
+        <svg id="pIcon" viewBox="0 0 24 24"><polygon points="6,3 21,12 6,21"/></svg>
+      </button>
+      <span class="time mono" id="clock">0:00 / 1:15</span>
+      <span class="caption" id="cap">­</span>
     </div>
 
-    <!-- Audio Player -->
-    <div class="player-card">
-      <audio id="audioElement" src="hgf_full.m4a" preload="auto"></audio>
-      <div class="player-top">
-        <div class="now-playing">
-          <span class="time-display"><span id="currentTime">00:00.0</span> / <span id="duration">01:15.0</span></span>
-          <span id="activeSpeakerPill" class="speaker-pill" style="display: none;">Speaker</span>
-        </div>
-        <div class="filter-pills" id="filterPills"></div>
-      </div>
-
-      <div class="timeline-container">
-        <div class="timeline-track" id="timelineTrack">
-          <div class="playhead" id="playhead"></div>
-        </div>
-        <div class="time-indicators">
-          <span>00:00</span>
-          <span>01:15.0</span>
-        </div>
-      </div>
-
-      <div class="legend" id="legendContainer"></div>
-
-      <div class="controls-row" style="margin-top: 1.5rem;">
-        <div class="play-btn-group">
-          <button class="btn-main" id="playBtn" onclick="togglePlay()">
-            <svg id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          </button>
-          <button class="filter-btn" onclick="seekRelative(-5)">-5s</button>
-          <button class="filter-btn" onclick="seekRelative(5)">+5s</button>
-        </div>
-        <div style="color: var(--text-dim); font-size: 0.85rem;">
-          Click any block on the timeline or card below to jump and listen
-        </div>
-      </div>
+    <div class="strip active" data-track="full" id="strip-full">
+      <button class="solo" data-track="full">MIX</button>
+      <div><div class="tlabel">Full mix</div><div class="tsub">as filmed · both voices</div></div>
+      <div class="wavebox"><canvas data-wave="full"></canvas></div>
+    </div>
+    <div class="strip" data-track="A" id="strip-A">
+      <button class="solo" data-track="A">SOLO</button>
+      <div><div class="tlabel" style="color:var(--amber)">Voice A</div><div class="tsub">30.0 s kept · rest silenced</div></div>
+      <div class="wavebox"><canvas data-wave="A"></canvas></div>
+    </div>
+    <div class="strip" data-track="B" id="strip-B">
+      <button class="solo" data-track="B">SOLO</button>
+      <div><div class="tlabel" style="color:var(--green)">Voice B</div><div class="tsub">29.9 s kept · rest silenced</div></div>
+      <div class="wavebox"><canvas data-wave="B"></canvas></div>
     </div>
 
-    <!-- Dialogue List -->
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--amber)"></span>voice A</span>
+      <span class="lg"><span class="sw" style="background:var(--green)"></span>voice B</span>
+      <span class="lg"><span class="sw" style="background:var(--clay)"></span>cross-talk — silenced in both stems</span>
+      <span class="lg mono" style="margin-left:auto">click a waveform to seek · space to play</span>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="v"><em>12.9 s</em></div><div class="k">of cross-talk detected in 15 regions and silenced — never guessed apart</div></div>
+    <div class="stat"><div class="v">bit-identical</div><div class="k">every kept sample machine-verified against the source (<span class="mono">--verify</span>)</div></div>
+    <div class="stat"><div class="v">31 turns</div><div class="k">attributed across two voices, ~10 ms boundary resolution</div></div>
+    <div class="stat"><div class="v">11.0 s</div><div class="k">to diarize this scene on an RTX 3050 laptop — no cloud, no upload</div></div>
+  </section>
+
+  <section class="made">
     <div>
-      <h2>Speaker Turns & Timestamps</h2>
-      <div class="segment-list" id="segmentList"></div>
+      <h2>One command produced everything on this page</h2>
+      <div class="cmd">$ <b>voxsolo full</b> scene.mp4</div>
+      <p class="note">Stems stream here as compressed audio; the tool's real output is lossless WAV at source bit depth, plus timeline exports for your NLE or DAW.</p>
     </div>
-  </div>
+    <div class="dl">
+      <a href="hgf_scene.edl" download>⬇ CMX 3600 EDL</a>
+      <a href="hgf_scene.srt" download>⬇ SRT subtitles</a>
+    </div>
+  </section>
 
-  <script>
-    const totalDuration = 75.0;
-    const audio = document.getElementById('audioElement');
-    const playBtn = document.getElementById('playBtn');
-    const playIcon = document.getElementById('playIcon');
-    const currentTimeEl = document.getElementById('currentTime');
-    const playhead = document.getElementById('playhead');
-    const timelineTrack = document.getElementById('timelineTrack');
-    const segmentList = document.getElementById('segmentList');
-    const activeSpeakerPill = document.getElementById('activeSpeakerPill');
-    const filterPills = document.getElementById('filterPills');
-    const legendContainer = document.getElementById('legendContainer');
+  <footer>
+    <p>voxsolo — speaker diarization, verbatim single-speaker isolation, NLE/DAW exports. MIT licensed.<br>
+    Scene from <a href="https://archive.org/details/his_girl_friday"><em>His Girl Friday</em> (1940)</a>, US public domain, via the Internet Archive.</p>
+    <p style="text-align:right"><a href="https://github.com/dhayanithi-svaromance/voxsolo">github.com/dhayanithi-svaromance/voxsolo</a><br><span class="mono">pip install voxsolo</span></p>
+  </footer>
+</div>
+<div class="toast" id="toast">copied — pip install voxsolo</div>
 
-    const speakers = ["SPEAKER_00", "SPEAKER_01"];
-    const segments = [{"id": "SEG_001", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 0.031, "end": 0.115, "dur": 0.084, "transcript": "", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_002", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 0.115, "end": 1.583, "dur": 1.468, "transcript": "Look, now look what I&#x27;ve done.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_003", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 1.651, "end": 5.684, "dur": 4.033, "transcript": "What I came up here to tell you is that you must stop phoning me a dozen times a day.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_004", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 5.212, "end": 6.055, "dur": 0.843, "transcript": "times a day.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_005", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 6.055, "end": 7.608, "dur": 1.553, "transcript": "sending me 20 telegrams.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_006", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 7.253, "end": 9.869, "dur": 2.616, "transcript": "All right, a beautiful telegram, don&#x27;t I? Everybody says so.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_007", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 9.633, "end": 11.371, "dur": 1.738, "transcript": "How you gonna listen to what I have to say?", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_008", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 11.185, "end": 18.779, "dur": 7.594, "transcript": "Look, look, what&#x27;s the use of fighting, Hildi? I&#x27;ll tell you what you do. You come back to work on the paper. If you find you can&#x27;t get along in a friendly fashion, we&#x27;ll get married again.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_009", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 19.69, "end": 22.036, "dur": 2.346, "transcript": "Oh, certainly, I haven&#x27;t any hard feelings.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_010", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 22.643, "end": 29.039, "dur": 6.396, "transcript": "Oh, Lord, you&#x27;re wonderful in a loathsome sort of way. Now, will you please be quiet just long enough for me to tell you what I came up here to say?", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_011", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 28.364, "end": 31.064, "dur": 2.7, "transcript": "I have a lunch date already.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_012", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 29.444, "end": 35.62, "dur": 6.176, "transcript": "I have a lunch date already. I cannot break this. Will you take your hands on me? What are you playing, osteopath? Temper, temper.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_013", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 31.435, "end": 31.908, "dur": 0.473, "transcript": "I can&#x27;t.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_014", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 31.992, "end": 33.562, "dur": 1.57, "transcript": "Break it, break it, break it, take your hand.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_015", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 34.793, "end": 34.878, "dur": 0.085, "transcript": "", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_016", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 36.262, "end": 41.999, "dur": 5.737, "transcript": "I&#x27;ll listen more. You are no longer my husband and no longer my boss, and you&#x27;re not going to be my boss.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_017", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 42.235, "end": 43.585, "dur": 1.35, "transcript": "What&#x27;s that supposed to mean?", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_018", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 43.636, "end": 44.767, "dur": 1.131, "transcript": "just what I say.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_019", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 44.918, "end": 46.808, "dur": 1.89, "transcript": "You mean you&#x27;re not coming back to work on the paper?", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_020", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 46.538, "end": 46.792, "dur": 0.254, "transcript": "", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_021", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 46.808, "end": 50.453, "dur": 3.645, "transcript": "All right, Mr. Burns, for the first time today. Ah, got a better...", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_022", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 50.453, "end": 51.314, "dur": 0.861, "transcript": "You&#x27;re up, huh?", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_023", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 50.555, "end": 52.293, "dur": 1.738, "transcript": "You bet I&#x27;ve got a better...", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_024", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 51.989, "end": 60.865, "dur": 8.876, "transcript": "All right, go on. Take it. Work for somebody else. That&#x27;s the gratitude I get. Oh, I wish you&#x27;d stop panning. One way you went and came here five years ago, a little college girl from a school journalism. I took a dull-faced hick.", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_025", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 55.448, "end": 56.596, "dur": 1.148, "transcript": "No, I wish you&#x27;d stop panicking.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_026", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 60.865, "end": 62.705, "dur": 1.84, "transcript": "Well, it wouldn&#x27;t take me if I hadn&#x27;t been to office.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_027", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 62.705, "end": 73.589, "dur": 10.884, "transcript": "Well, why should I? I told you nobody would have a face around here, man. Good looking at that, but I was shuddering. Listen, Walls, okay? Listen, I made a great reporter out of your healthy image. What we have is good on any other paper in New York. We&#x27;re a team. That&#x27;s what we are. You need me and I need Joe in the paper, and he&#x27;s... Oh!", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, {"id": "SEG_028", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 65.692, "end": 66.67, "dur": 0.978, "transcript": "Listen, wall. Listen, wall.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_029", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 69.809, "end": 73.758, "dur": 3.949, "transcript": "We&#x27;re a team, that&#x27;s what we are, you and me, my name&#x27;s Joe and the better needs both of us!", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_030", "spk": "SPEAKER_01", "label": "SPEAKER_01", "start": 73.943, "end": 74.399, "dur": 0.456, "transcript": "seconds.", "color": "#a855f7", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}, {"id": "SEG_031", "spk": "SPEAKER_00", "label": "SPEAKER_00", "start": 74.635, "end": 74.973, "dur": 0.338, "transcript": "", "color": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}];
-    const spkColors = {"SPEAKER_00": {"name": "cyan", "badge": "rgba(0, 242, 254, 0.15)", "border": "#00f2fe", "text": "#00f2fe", "grad": "linear-gradient(135deg, #00f2fe, #4facfe)"}, "SPEAKER_01": {"name": "purple", "badge": "rgba(168, 85, 247, 0.15)", "border": "#a855f7", "text": "#c084fc", "grad": "linear-gradient(135deg, #c084fc, #9333ea)"}};
-    const audioSources = {"full": "hgf_full.m4a", "SPEAKER_00": "hgf_SPEAKER_00.m4a", "SPEAKER_01": "hgf_SPEAKER_01.m4a"};
+<audio id="au-full" src="hgf_full.m4a" preload="auto"></audio>
+<audio id="au-A" src="hgf_SPEAKER_00.m4a" preload="metadata"></audio>
+<audio id="au-B" src="hgf_SPEAKER_01.m4a" preload="metadata"></audio>
 
-    // Track switcher: full mix plus one button per isolated speaker stem.
-    let activeTrack = 'full';
-    function switchTrack(key) {
-      if (!(key in audioSources) || key === activeTrack) return;
-      const wasPlaying = !audio.paused;
-      const t = audio.currentTime;
-      activeTrack = key;
-      audio.src = audioSources[key];
-      audio.currentTime = t;
-      if (wasPlaying) audio.play();
-      document.querySelectorAll('.filter-btn[data-track]').forEach(b =>
-        b.classList.toggle('active', b.dataset.track === key));
-    }
-    Object.keys(audioSources).forEach(key => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (key === 'full' ? ' active' : '');
-      btn.dataset.track = key;
-      btn.textContent = key === 'full' ? 'Full Audio' : key + ' (solo)';
-      btn.onclick = () => switchTrack(key);
-      filterPills.appendChild(btn);
-    });
+<script>
+const D = {"full": [0.452, 0.361, 0.501, 0.499, 0.11, 0.074, 0.219, 0.213, 0.107, 0.065, 0.202, 0.206, 0.062, 0.04, 0.07, 0.025, 0.018, 0.41, 0.519, 0.159, 0.344, 0.43, 0.258, 0.295, 0.164, 0.159, 0.454, 0.329, 0.236, 0.256, 0.102, 0.03, 0.052, 0.08, 0.273, 0.29, 0.294, 0.192, 0.22, 0.225, 0.265, 0.06, 0.353, 0.334, 0.216, 0.131, 0.127, 0.24, 0.122, 0.107, 0.369, 0.503, 0.309, 0.206, 0.303, 0.307, 0.175, 0.171, 0.13, 0.47, 0.311, 0.194, 0.174, 0.433, 0.31, 0.22, 0.247, 0.547, 0.437, 0.201, 0.41, 0.374, 0.361, 0.305, 0.29, 0.315, 0.327, 0.595, 0.429, 0.401, 0.403, 0.303, 0.308, 0.526, 0.525, 0.407, 0.286, 0.381, 0.317, 0.398, 0.332, 0.365, 0.353, 0.615, 0.463, 0.434, 0.377, 0.284, 0.259, 0.627, 0.684, 0.684, 0.685, 0.167, 0.153, 0.483, 0.436, 0.396, 0.24, 0.261, 0.283, 0.284, 0.124, 0.207, 0.113, 0.283, 0.28, 0.245, 0.304, 0.334, 0.274, 0.407, 0.523, 0.367, 0.319, 0.295, 0.261, 0.256, 0.223, 0.346, 0.271, 0.357, 0.271, 0.249, 0.44, 0.415, 0.347, 0.32, 0.497, 0.512, 0.515, 0.233, 0.427, 0.355, 0.417, 0.145, 0.517, 0.318, 0.398, 0.297, 0.306, 0.466, 0.331, 0.264, 0.417, 0.467, 0.419, 0.393, 0.457, 0.318, 0.402, 0.446, 0.452, 0.446, 0.52, 0.516, 0.373, 0.473, 0.242, 0.089, 0.117, 0.302, 0.552, 0.491, 0.538, 0.525, 0.46, 0.464, 0.508, 0.372, 0.02, 0.032, 0.017, 0.016, 0.024, 0.015, 0.112, 0.061, 0.024, 0.688, 0.737, 0.588, 0.103, 0.031, 0.332, 0.458, 0.209, 0.43, 0.556, 0.551, 0.499, 0.363, 0.359, 0.409, 0.349, 0.16, 0.424, 0.466, 0.288, 0.316, 0.152, 0.022, 0.014, 0.016, 0.022, 0.021, 0.018, 0.182, 0.166, 0.131, 0.12, 0.193, 0.39, 0.602, 0.559, 0.242, 0.459, 0.427, 0.37, 0.513, 0.496, 0.158, 0.165, 0.201, 0.36, 0.443, 0.508, 0.575, 0.576, 0.542, 0.558, 0.183, 0.263, 0.152, 0.474, 0.422, 0.275, 0.514, 0.517, 0.402, 0.551, 0.387, 0.395, 0.157, 0.563, 0.56, 0.358, 0.595, 0.714, 0.485, 0.413, 0.613, 0.558, 0.463, 0.155, 0.278, 0.197, 0.761, 0.653, 0.703, 0.435, 0.787, 0.286, 0.349, 0.247, 0.696, 0.465, 0.373, 0.326, 0.439, 0.487, 0.101, 0.343, 0.213, 0.546, 0.206, 0.688, 0.591, 0.512, 0.514, 0.473, 0.469, 0.383, 0.458, 0.424, 0.347, 0.335, 0.261, 0.228, 0.243, 0.336, 0.395, 0.7, 1.0, 0.288, 0.517, 0.537, 0.427, 0.274, 0.261, 0.214, 0.324, 0.346, 0.493, 0.458, 0.385, 0.481, 0.928, 0.425, 0.55, 0.587, 0.406, 0.338, 0.261, 0.174, 0.275, 0.271, 0.166, 0.522, 0.471, 0.696, 0.22, 0.28, 0.514, 0.667, 0.136, 0.433, 0.073, 0.37, 0.325, 0.276, 0.108, 0.034, 0.031, 0.017, 0.084, 0.022, 0.015, 0.635, 0.64, 0.38, 0.19, 0.183, 0.045, 0.112, 0.207, 0.253, 0.16, 0.098, 0.055, 0.037, 0.327, 0.563, 0.527, 0.483, 0.475, 0.645, 0.598, 0.247, 0.315, 0.489, 0.128, 0.265, 0.061, 0.236, 0.152, 0.382, 0.222, 0.314, 0.146, 0.47, 0.411, 0.13, 0.28, 0.405, 0.265, 0.293, 0.168, 0.024, 0.017, 0.017, 0.277, 0.43, 0.8, 0.663, 0.523, 0.446, 0.473, 0.543, 0.267, 0.257, 0.204, 0.049, 0.033, 0.017, 0.073, 0.202, 0.226, 0.24, 0.235, 0.323, 0.267, 0.211, 0.176, 0.201, 0.133, 0.069, 0.11, 0.088, 0.389, 0.54, 0.112, 0.208, 0.59, 0.722, 0.395, 0.525, 0.458, 0.264, 0.064, 0.015, 0.115, 0.204, 0.316, 0.247, 0.39, 0.405, 0.469, 0.57, 0.491, 0.309, 0.375, 0.447, 0.368, 0.672, 0.595, 0.375, 0.334, 0.355, 0.414, 0.483, 0.123, 0.126, 0.112, 0.326, 0.335, 0.109, 0.156, 0.257, 0.09, 0.391, 0.443, 0.237, 0.367, 0.256, 0.123, 0.153, 0.233, 0.217, 0.25, 0.208, 0.204, 0.23, 0.347, 0.326, 0.197, 0.146, 0.162, 0.201, 0.232, 0.238, 0.26, 0.381, 0.593, 0.603, 0.813, 0.692, 0.231, 0.291, 0.339, 0.29, 0.172, 0.29, 0.38, 0.492, 0.371, 0.307, 0.278, 0.243, 0.39, 0.604, 0.734, 0.754, 0.514, 0.43, 0.233, 0.265, 0.473, 0.441, 0.553, 0.427, 0.355, 0.335, 0.472, 0.273, 0.301, 0.392, 0.291, 0.454, 0.464, 0.413, 0.353, 0.416, 0.594, 0.645, 0.587, 0.329, 0.345, 0.375, 0.306, 0.4, 0.447, 0.473, 0.471, 0.192, 0.121, 0.51, 0.341, 0.677, 0.586, 0.422, 0.448, 0.595, 0.392, 0.294, 0.377, 0.365, 0.292, 0.581, 0.231, 0.307, 0.41, 0.412, 0.268, 0.172, 0.496, 0.504, 0.284, 0.172, 0.314, 0.234, 0.296, 0.227, 0.416, 0.577, 0.442, 0.665, 0.477, 0.376, 0.357, 0.322, 0.479, 0.459, 0.484, 0.399, 0.753, 0.568, 0.444, 0.531, 0.477, 0.237, 0.589, 0.475, 0.184, 0.078, 0.446, 0.264, 0.299, 0.546, 0.869, 0.113, 0.242, 0.447, 0.496, 0.498, 0.217, 0.144, 0.496, 0.397, 0.185, 0.258, 0.1, 0.172, 0.23, 0.263, 0.288, 0.334, 0.301, 0.316, 0.216, 0.288, 0.431, 0.467, 0.213, 0.315, 0.269, 0.189, 0.203, 0.384, 0.409, 0.383, 0.502, 0.431, 0.256, 0.299, 0.441, 0.371, 0.44, 0.316, 0.564, 0.41, 0.607, 0.62, 0.393, 0.192, 0.494, 0.611, 0.519, 0.608, 0.592, 0.502, 0.427, 0.418, 0.425, 0.171, 0.394, 0.453, 0.524, 0.355, 0.468, 0.465, 0.376, 0.355, 0.321, 0.338, 0.478, 0.715, 0.493, 0.282, 0.509, 0.483, 0.36, 0.384, 0.5, 0.598, 0.572, 0.624, 0.587, 0.393, 0.46, 0.575, 0.422, 0.581, 0.59, 0.403, 0.699, 0.494, 0.481, 0.495, 0.263, 0.497, 0.542, 0.674, 0.745, 0.604, 0.53, 0.558, 0.509, 0.542, 0.52, 0.692, 0.641, 0.515, 0.432, 0.567, 0.496, 0.412, 0.53, 0.563, 0.404, 0.388, 0.303, 0.742, 0.88, 0.661, 0.494, 0.335, 0.336, 0.472, 0.458, 0.341, 0.409, 0.306, 0.126, 0.047, 0.024, 0.012, 0.155, 0.147, 0.161], "A": [0.6, 0.367, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.403, 0.408, 0.233, 0.227, 0.173, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.405, 0.385, 0.419, 0.434, 0.791, 0.57, 0.532, 0.536, 0.402, 0.409, 0.698, 0.698, 0.541, 0.38, 0.506, 0.422, 0.528, 0.441, 0.485, 0.107, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.346, 0.375, 0.378, 0.164, 0.275, 0.151, 0.376, 0.372, 0.325, 0.403, 0.443, 0.364, 0.54, 0.695, 0.487, 0.424, 0.391, 0.347, 0.34, 0.296, 0.46, 0.36, 0.474, 0.36, 0.331, 0.585, 0.551, 0.461, 0.425, 0.66, 0.68, 0.685, 0.31, 0.567, 0.472, 0.553, 0.193, 0.687, 0.423, 0.529, 0.395, 0.407, 0.62, 0.44, 0.351, 0.554, 0.62, 0.557, 0.522, 0.607, 0.422, 0.533, 0.592, 0.6, 0.593, 0.691, 0.686, 0.495, 0.628, 0.321, 0.118, 0.155, 0.402, 0.733, 0.652, 0.714, 0.697, 0.611, 0.617, 0.675, 0.494, 0.027, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.022, 0.913, 0.978, 0.78, 0.137, 0.042, 0.441, 0.608, 0.277, 0.572, 0.738, 0.732, 0.663, 0.482, 0.476, 0.544, 0.463, 0.213, 0.563, 0.619, 0.383, 0.42, 0.202, 0.029, 0.007, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.096, 0.583, 0.648, 0.135, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.097, 0.268, 0.3, 0.319, 0.312, 0.429, 0.355, 0.281, 0.234, 0.267, 0.176, 0.092, 0.146, 0.117, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.012, 0.153, 0.271, 0.42, 0.329, 0.518, 0.538, 0.623, 0.757, 0.653, 0.41, 0.499, 0.594, 0.489, 0.893, 0.791, 0.498, 0.0, 0.0, 0.246, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.769, 0.853, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.676, 0.682, 0.571, 0.309, 0.352, 0.628, 0.586, 0.735, 0.567, 0.471, 0.445, 0.627, 0.363, 0.4, 0.52, 0.386, 0.603, 0.616, 0.549, 0.469, 0.553, 0.789, 0.856, 0.78, 0.438, 0.458, 0.498, 0.407, 0.531, 0.594, 0.621, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.521, 0.39, 0.501, 0.485, 0.388, 0.772, 0.307, 0.408, 0.545, 0.547, 0.356, 0.228, 0.659, 0.67, 0.377, 0.228, 0.418, 0.311, 0.393, 0.302, 0.553, 0.767, 0.587, 0.883, 0.633, 0.499, 0.474, 0.428, 0.637, 0.61, 0.643, 0.53, 1.0, 0.755, 0.59, 0.705, 0.634, 0.314, 0.782, 0.63, 0.244, 0.096, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.229, 0.306, 0.349, 0.383, 0.444, 0.399, 0.42, 0.287, 0.382, 0.572, 0.621, 0.284, 0.419, 0.357, 0.25, 0.269, 0.51, 0.544, 0.509, 0.667, 0.572, 0.34, 0.397, 0.586, 0.493, 0.585, 0.42, 0.749, 0.544, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.667, 0.568, 0.555, 0.564, 0.228, 0.523, 0.602, 0.696, 0.471, 0.622, 0.618, 0.5, 0.471, 0.427, 0.449, 0.635, 0.95, 0.655, 0.375, 0.676, 0.642, 0.478, 0.51, 0.664, 0.794, 0.76, 0.829, 0.78, 0.523, 0.612, 0.607, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.016, 0.206, 0.195, 0.214], "B": [0.0, 0.416, 0.577, 0.575, 0.126, 0.085, 0.252, 0.245, 0.123, 0.074, 0.233, 0.237, 0.072, 0.046, 0.08, 0.029, 0.021, 0.472, 0.597, 0.183, 0.396, 0.495, 0.296, 0.34, 0.189, 0.183, 0.523, 0.379, 0.272, 0.295, 0.118, 0.035, 0.06, 0.092, 0.314, 0.334, 0.339, 0.221, 0.254, 0.259, 0.304, 0.069, 0.406, 0.385, 0.249, 0.15, 0.146, 0.276, 0.141, 0.123, 0.014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.075, 0.541, 0.358, 0.223, 0.2, 0.498, 0.357, 0.253, 0.284, 0.63, 0.503, 0.069, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.282, 0.499, 0.434, 0.327, 0.298, 0.722, 0.787, 0.788, 0.788, 0.192, 0.176, 0.555, 0.502, 0.456, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.007, 0.21, 0.191, 0.151, 0.138, 0.222, 0.449, 0.693, 0.643, 0.279, 0.528, 0.492, 0.425, 0.59, 0.571, 0.182, 0.19, 0.232, 0.414, 0.51, 0.584, 0.662, 0.663, 0.624, 0.642, 0.211, 0.302, 0.174, 0.546, 0.486, 0.317, 0.592, 0.595, 0.463, 0.634, 0.446, 0.455, 0.181, 0.648, 0.644, 0.412, 0.685, 0.822, 0.558, 0.475, 0.706, 0.642, 0.532, 0.179, 0.32, 0.227, 0.876, 0.751, 0.809, 0.5, 0.906, 0.329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.263, 0.279, 0.387, 0.454, 0.0, 0.0, 0.0, 0.0, 0.55, 0.345, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.283, 0.3, 0.2, 0.316, 0.312, 0.191, 0.6, 0.543, 0.8, 0.253, 0.323, 0.592, 0.331, 0.156, 0.498, 0.084, 0.426, 0.374, 0.317, 0.124, 0.039, 0.0, 0.0, 0.0, 0.0, 0.016, 0.731, 0.737, 0.437, 0.218, 0.21, 0.052, 0.129, 0.238, 0.291, 0.184, 0.112, 0.064, 0.043, 0.377, 0.648, 0.606, 0.556, 0.546, 0.743, 0.688, 0.285, 0.362, 0.562, 0.147, 0.305, 0.07, 0.271, 0.174, 0.44, 0.256, 0.361, 0.169, 0.542, 0.473, 0.15, 0.323, 0.466, 0.305, 0.337, 0.193, 0.028, 0.019, 0.02, 0.319, 0.495, 0.921, 0.763, 0.602, 0.514, 0.545, 0.625, 0.307, 0.296, 0.235, 0.057, 0.025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.042, 0.448, 0.621, 0.129, 0.239, 0.68, 0.831, 0.455, 0.605, 0.527, 0.304, 0.073, 0.015, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.476, 0.556, 0.141, 0.145, 0.129, 0.375, 0.386, 0.125, 0.18, 0.295, 0.104, 0.45, 0.509, 0.273, 0.423, 0.295, 0.142, 0.176, 0.268, 0.25, 0.288, 0.24, 0.235, 0.265, 0.4, 0.375, 0.227, 0.168, 0.186, 0.232, 0.267, 0.274, 0.299, 0.439, 0.682, 0.648, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.333, 0.437, 0.566, 0.427, 0.353, 0.32, 0.279, 0.241, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.09, 0.514, 0.304, 0.344, 0.629, 1.0, 0.13, 0.279, 0.514, 0.571, 0.574, 0.25, 0.165, 0.57, 0.457, 0.213, 0.297, 0.115, 0.048, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.244, 0.387, 0.53, 0.512, 0.392, 0.471, 0.353, 0.145, 0.054, 0.0, 0.0, 0.0, 0.0, 0.0], "segA": [[0.03, 0.12], [5.21, 6.05], [7.25, 9.87], [11.19, 18.78], [19.69, 22.04], [28.36, 31.06], [31.43, 31.91], [31.99, 33.56], [34.79, 34.88], [42.23, 43.59], [44.92, 46.81], [50.45, 51.31], [51.99, 60.87], [62.7, 73.59], [74.64, 74.97]], "segB": [[0.12, 1.58], [1.65, 5.68], [6.05, 7.61], [9.63, 11.37], [22.64, 29.04], [29.44, 35.62], [36.26, 42.0], [43.64, 44.77], [46.54, 46.79], [46.81, 50.45], [50.55, 52.29], [55.45, 56.6], [60.87, 62.7], [65.69, 66.67], [69.81, 73.76], [73.94, 74.4]], "overlap": [[5.21, 5.68], [7.25, 7.61], [9.63, 9.87], [11.19, 11.37], [28.36, 29.04], [29.44, 31.06], [31.43, 31.91], [31.99, 33.56], [34.79, 34.88], [46.54, 46.79], [50.55, 51.31], [51.99, 52.29], [55.45, 56.6], [65.69, 66.67], [69.81, 73.59]], "dur": 75.0, "cues": [{"a": 0.12, "b": 1.58, "s": "B", "x": "Look, now look what I've done."}, {"a": 1.65, "b": 5.68, "s": "B", "x": "What I came up here to tell you is that you must stop phoning me a dozen times a day."}, {"a": 5.21, "b": 6.05, "s": "A", "x": "times a day."}, {"a": 6.05, "b": 7.61, "s": "B", "x": "sending me 20 telegrams."}, {"a": 7.25, "b": 9.87, "s": "A", "x": "All right, a beautiful telegram, don't I? Everybody says so."}, {"a": 9.63, "b": 11.37, "s": "B", "x": "How you gonna listen to what I have to say?"}, {"a": 11.19, "b": 18.78, "s": "A", "x": "Look, look, what's the use of fighting, Hildi? I'll tell you what you do. You come back to work on the paper. If you find you can't get along in a friendly fashion, we'll get married again."}, {"a": 19.69, "b": 22.04, "s": "A", "x": "Oh, certainly, I haven't any hard feelings."}, {"a": 22.64, "b": 29.04, "s": "B", "x": "Oh, Lord, you're wonderful in a loathsome sort of way. Now, will you please be quiet just long enough for me to tell you what I came up here to say?"}, {"a": 28.36, "b": 31.06, "s": "A", "x": "I have a lunch date already."}, {"a": 29.44, "b": 35.62, "s": "B", "x": "I have a lunch date already. I cannot break this. Will you take your hands on me? What are you playing, osteopath? Temper, temper."}, {"a": 31.43, "b": 31.91, "s": "A", "x": "I can't."}, {"a": 31.99, "b": 33.56, "s": "A", "x": "Break it, break it, break it, take your hand."}, {"a": 36.26, "b": 42.0, "s": "B", "x": "I'll listen more. You are no longer my husband and no longer my boss, and you're not going to be my boss."}, {"a": 42.23, "b": 43.59, "s": "A", "x": "What's that supposed to mean?"}, {"a": 43.64, "b": 44.77, "s": "B", "x": "just what I say."}, {"a": 44.92, "b": 46.81, "s": "A", "x": "You mean you're not coming back to work on the paper?"}, {"a": 46.81, "b": 50.45, "s": "B", "x": "All right, Mr. Burns, for the first time today. Ah, got a better..."}, {"a": 50.45, "b": 51.31, "s": "A", "x": "You're up, huh?"}, {"a": 50.55, "b": 52.29, "s": "B", "x": "You bet I've got a better..."}, {"a": 51.99, "b": 60.87, "s": "A", "x": "All right, go on. Take it. Work for somebody else. That's the gratitude I get. Oh, I wish you'd stop panning. One way you went and came here five years ago, a little college girl from a school journalism. I took a dull-faced hick."}, {"a": 55.45, "b": 56.6, "s": "B", "x": "No, I wish you'd stop panicking."}, {"a": 60.87, "b": 62.7, "s": "B", "x": "Well, it wouldn't take me if I hadn't been to office."}, {"a": 62.7, "b": 73.59, "s": "A", "x": "Well, why should I? I told you nobody would have a face around here, man. Good looking at that, but I was shuddering. Listen, Walls, okay? Listen, I made a great reporter out of your healthy image. What we have is good on any other paper in New York. We're a team. That's what we are. You need me and I need Joe in the paper, and he's... Oh!"}, {"a": 65.69, "b": 66.67, "s": "B", "x": "Listen, wall. Listen, wall."}, {"a": 69.81, "b": 73.76, "s": "B", "x": "We're a team, that's what we are, you and me, my name's Joe and the better needs both of us!"}, {"a": 73.94, "b": 74.4, "s": "B", "x": "seconds."}]};
+const COLORS = {A:"#E8A733", B:"#4FB58C", clay:"#D3766B", grey:"#6E7674", dim:"#2A2E31", line:"#2C3034"};
+const els = {play:document.getElementById("play"), icon:document.getElementById("pIcon"),
+             clock:document.getElementById("clock"), cap:document.getElementById("cap")};
+const tracks = ["full","A","B"];
+const audio = Object.fromEntries(tracks.map(t=>[t, document.getElementById("au-"+t)]));
+let active = "full", playing = false;
 
-    // Render Filter Buttons & Legend
-    speakers.forEach(spk => {
-      const c = spkColors[spk];
-      
-      // Legend item
-      const leg = document.createElement('div');
-      leg.className = 'legend-item';
-      leg.innerHTML = `<div class="legend-color" style="background: ${c.grad}"></div><span>${spk}</span>`;
-      legendContainer.appendChild(leg);
-    });
+function inAny(t, ivs){ return ivs.some(([a,b]) => t>=a && t<b); }
 
-    // Render Timeline Segments
-    segments.forEach(seg => {
-      const leftPct = (seg.start / totalDuration) * 100;
-      const widthPct = (seg.dur / totalDuration) * 100;
-      const block = document.createElement('div');
-      block.className = 'timeline-segment';
-      block.style.left = `${leftPct}%`;
-      block.style.width = `${Math.max(widthPct, 0.6)}%`;
-      block.style.background = seg.grad;
-      block.title = `${seg.label}: ${seg.start.toFixed(1)}s - ${seg.end.toFixed(1)}s`;
-      block.onclick = (e) => {
-        e.stopPropagation();
-        seekTo(seg.start);
-      };
-      timelineTrack.appendChild(block);
-    });
-
-    // Render Segment List
-    segments.forEach(seg => {
-      const c = spkColors[seg.spk];
-      const card = document.createElement('div');
-      card.className = 'dialogue-card';
-      card.id = `card-${seg.id}`;
-      card.onclick = () => seekTo(seg.start);
-
-      card.innerHTML = `
-        <div>
-          <span class="speaker-pill" style="background: ${c.badge}; color: ${c.text}; border: 1px solid ${c.border};">${seg.spk}</span>
-          <div class="timestamp-badge" style="margin-top: 4px;">${formatTime(seg.start)} - ${formatTime(seg.end)}</div>
-        </div>
-        <div class="dialogue-text">${seg.transcript || '&mdash;'}</div>
-        <div class="play-icon-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </div>
-      `;
-      segmentList.appendChild(card);
-    });
-
-    timelineTrack.onclick = (e) => {
-      const rect = timelineTrack.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const pct = clickX / rect.width;
-      seekTo(pct * totalDuration);
-    };
-
-    function togglePlay() {
-      if (audio.paused) {
-        audio.play();
-        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+function draw(){
+  document.querySelectorAll("canvas[data-wave]").forEach(cv=>{
+    const key = cv.dataset.wave, peaks = D[key];
+    const dpr = window.devicePixelRatio||1;
+    const w = cv.parentElement.clientWidth, h = cv.parentElement.clientHeight;
+    cv.width = w*dpr; cv.height = h*dpr;
+    const ctx = cv.getContext("2d"); ctx.scale(dpr,dpr); ctx.clearRect(0,0,w,h);
+    const mid = h/2 - 6, n = peaks.length, bw = w/n;
+    for(let i=0;i<n;i++){
+      const t = i/n*D.dur, v = Math.max(peaks[i],0.02), bh = v*(mid-4);
+      let col;
+      if(key==="full"){
+        col = inAny(t,D.overlap) ? COLORS.clay : inAny(t,D.segA) ? COLORS.A : inAny(t,D.segB) ? COLORS.B : COLORS.dim;
       } else {
-        audio.pause();
-        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+        const kept = key==="A" ? (inAny(t,D.segA)&&!inAny(t,D.overlap)) : (inAny(t,D.segB)&&!inAny(t,D.overlap));
+        col = kept ? (key==="A"?COLORS.A:COLORS.B) : COLORS.dim;
       }
+      ctx.fillStyle = col;
+      ctx.fillRect(i*bw, mid-bh, Math.max(bw-0.6,1), bh*2);
     }
+    // baseline + playhead lane
+    ctx.fillStyle = COLORS.line; ctx.fillRect(0, h-4, w, 1);
+  });
+  positionHeads();
+}
+function positionHeads(){
+  const t = audio[active].currentTime||0, frac = Math.min(t/D.dur,1);
+  document.querySelectorAll(".wavebox").forEach(box=>{
+    let ph = box.querySelector(".ph");
+    if(!ph){ ph=document.createElement("div"); ph.className="ph";
+      ph.style.cssText="position:absolute;top:0;bottom:0;width:1.5px;background:#ECEDE8;pointer-events:none";
+      box.appendChild(ph); }
+    ph.style.left = (frac*100)+"%";
+  });
+}
+function fmt(t){ return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0"); }
+function setIcon(){ els.icon.innerHTML = playing ? '<rect x="5" y="4" width="5" height="16"/><rect x="14" y="4" width="5" height="16"/>' : '<polygon points="6,3 21,12 6,21"/>'; }
+function switchTrack(key){
+  if(key===active) return;
+  const t = audio[active].currentTime;
+  audio[active].pause();
+  active = key;
+  audio[active].currentTime = t;
+  if(playing) audio[active].play();
+  document.querySelectorAll(".strip").forEach(s=>s.classList.toggle("active", s.dataset.track===key));
+}
+function toggle(){ playing = !playing; playing ? audio[active].play() : audio[active].pause(); setIcon(); }
 
-    function seekTo(sec) {
-      audio.currentTime = sec;
-      if (audio.paused) {
-        audio.play();
-        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
-      }
-    }
-
-    function seekRelative(delta) {
-      audio.currentTime = Math.max(0, Math.min(totalDuration, audio.currentTime + delta));
-    }
-
-    function formatTime(sec) {
-      const m = Math.floor(sec / 60);
-      const s = (sec % 60).toFixed(1);
-      return `${String(m).padStart(2, '0')}:${s.padStart(4, '0')}`;
-    }
-
-    audio.addEventListener('timeupdate', () => {
-      const cur = audio.currentTime;
-      currentTimeEl.textContent = formatTime(cur);
-      const pct = (cur / totalDuration) * 100;
-      playhead.style.left = `${pct}%`;
-
-      let currentSeg = segments.find(s => cur >= s.start && cur <= s.end);
-      document.querySelectorAll('.dialogue-card').forEach(c => c.classList.remove('active'));
-
-      if (currentSeg) {
-        const c = spkColors[currentSeg.spk];
-        activeSpeakerPill.style.display = 'inline-flex';
-        activeSpeakerPill.style.background = c.badge;
-        activeSpeakerPill.style.color = c.text;
-        activeSpeakerPill.style.border = `1px solid ${c.border}`;
-        activeSpeakerPill.textContent = currentSeg.spk;
-
-        const card = document.getElementById(`card-${currentSeg.id}`);
-        if (card) card.classList.add('active');
-      } else {
-        activeSpeakerPill.style.display = 'none';
-      }
-    });
-
-    audio.addEventListener('ended', () => {
-      playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
-      playhead.style.left = '0%';
-    });
-  </script>
+document.querySelectorAll(".solo").forEach(b=>b.onclick=()=>switchTrack(b.dataset.track));
+els.play.onclick = toggle;
+document.addEventListener("keydown",e=>{ if(e.code==="Space" && e.target.tagName!=="BUTTON"){ e.preventDefault(); toggle(); }});
+document.querySelectorAll(".wavebox").forEach(box=>{
+  box.onclick = e=>{
+    const r = box.getBoundingClientRect();
+    audio[active].currentTime = (e.clientX-r.left)/r.width * D.dur;
+    if(!playing) toggle();
+  };
+});
+setInterval(()=>{
+  const t = audio[active].currentTime||0;
+  els.clock.textContent = fmt(t)+" / "+fmt(D.dur);
+  positionHeads();
+  const cue = D.cues.find(c=>t>=c.a && t<=c.b);
+  els.cap.innerHTML = cue ? '<span class="who '+cue.s+'">'+(cue.s==="A"?"VOICE A":"VOICE B")+'</span>&nbsp; '+cue.x.replace(/</g,"&lt;") : "­";
+}, 120);
+audio.full.onended = audio.A.onended = audio.B.onended = ()=>{ playing=false; setIcon(); };
+document.getElementById("pipBtn").onclick = ()=>{
+  navigator.clipboard.writeText("pip install voxsolo").then(()=>{
+    const t=document.getElementById("toast"); t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 1600);
+  });
+};
+window.addEventListener("resize", draw);
+draw();
+</script>
 </body>
 </html>
