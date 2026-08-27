@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+.DS_Store
+
+# Media and generated artefacts (tool outputs)
+*.wav
+*.mov
+*.mp4
+*.mkv
+*.m4a
+*.webm
+*_timeline.json
+*.rttm
+*.srt
+*.vtt
+*.edl
+*_markers.csv
+*_labels.txt
+*_player.html
+voxsolo_*/
+
+# Build artefacts
+build/
+dist/
+*.egg-info/
+.pytest_cache/
