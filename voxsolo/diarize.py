@@ -136,7 +136,20 @@ def diarize(
         if max_speakers is not None:
             kwargs["max_speakers"] = max_speakers
 
-    result = pipeline(audio_path, **kwargs)
+    try:
+        result = pipeline(audio_path, **kwargs)
+    except Exception as err:
+        if "torchcodec" in str(err).lower() or "waveform" in str(err).lower():
+            import soundfile as sf
+            import torch
+            data, sr = sf.read(audio_path, dtype="float32")
+            if data.ndim == 1:
+                tensor = torch.from_numpy(data).unsqueeze(0)
+            else:
+                tensor = torch.from_numpy(data.T)
+            result = pipeline({"waveform": tensor, "sample_rate": sr}, **kwargs)
+        else:
+            raise
     # pyannote 4.x returns a wrapper object; 3.x returns an Annotation directly.
     annotation = getattr(result, "speaker_diarization", result)
 

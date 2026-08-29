@@ -8,6 +8,7 @@ env/
 
 # Media and generated artefacts (tool outputs)
 *.wav
+*.mp3
 *.mov
 *.mp4
 *.mkv
